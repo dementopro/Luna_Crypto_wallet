@@ -1,0 +1,95 @@
+package com.alphawallet.app.ui;
+
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.alphawallet.app.R;
+import com.alphawallet.app.ui.widget.adapter.SwapProviderAdapter;
+import com.alphawallet.app.viewmodel.SelectSwapProvidersViewModel;
+
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class SelectSwapProvidersActivity extends BaseActivity
+{
+    private SelectSwapProvidersViewModel viewModel;
+    private SwapProviderAdapter adapter;
+    static boolean isShowMore = false;
+    static Button but;
+
+    public void showmore_swap(View view)
+    {
+        but = findViewById(R.id.button3);
+        isShowMore = !isShowMore;
+        if (isShowMore == false)
+            but.setText(R.string.title_show_more);
+        else
+            but.setText(R.string.title_show_less);
+
+        finish();
+        startActivity(getIntent());
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_select_exchange);
+        toolbar();
+        setTitle(getString(R.string.title_select_exchanges));
+        initViewModel();
+        initViews();
+        but = findViewById(R.id.button3);
+        if (isShowMore == false)
+            but.setText(R.string.title_show_more);
+        else
+            but.setText(R.string.title_show_less);
+    }
+
+    private void initViewModel()
+    {
+        viewModel = new ViewModelProvider(this)
+                .get(SelectSwapProvidersViewModel.class);
+    }
+
+    private void initViews()
+    {
+        RecyclerView recyclerView = findViewById(R.id.list);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new SwapProviderAdapter(this, viewModel.getSwapProviders(isShowMore));
+        recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        if (viewModel.savePreferences(adapter.getExchanges()))
+        {
+            setResult(RESULT_OK);
+            super.onBackPressed();
+        }
+        else
+        {
+            Toast.makeText(this, getString(R.string.message_select_one_exchange), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        if (item.getItemId() == android.R.id.home)
+        {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+}
